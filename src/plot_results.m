@@ -1,59 +1,45 @@
 % post processing. plot results
 
 % % compare input steering angle with yaw angle
-% % normalize yaw
-% yaw = wrapToPi(X(3,:));
-% 
-[ref, t] = GetInputSignal(inputs.dt);
-% 
-% figure;
-% hold on
-% plot(t, ref);
-% plot(t, yaw);
+% normalize yaw
+yaw = wrapToPi(X(3,:));
+
+[ref, t] = GetInputSignal(inputs.dt, inputs.t_end);
+
+figure;
+hold on
+plot(t, ref);
+plot(t, yaw);
 
 % traction limits
-F_wfllong = vertcat(data.F_wfllong);
-F_wfllat = vertcat(data.F_wfllat);
-F_wfrlong = vertcat(data.F_wfrlong);
-F_wfrlat = vertcat(data.F_wfrlat);
-F_wrllong = vertcat(data.F_wrllong);
-F_wrllat = vertcat(data.F_wrllat);
-F_wrrlong = vertcat(data.F_wrrlong);
-F_wrrlat = vertcat(data.F_wrrlat);
-F_nfl = vertcat(data.F_nfl);
-F_nfr = vertcat(data.F_nfr);
-F_nrl = vertcat(data.F_nrl);
-F_nrr = vertcat(data.F_nrr);
+figure;
+hold on
+title('friction limits');
+% for k = 3:3:12
+%     plot(t(2:end), vehicle_param.mu*data(k,:));
+% end
+% for k = 1:3:12
+%     plot(t(2:end), sqrt(data(k,:).^2+data(k+1,:).^2));
+% end
+% legend('lim-fl','lim-fr','lim-rl','lim-rr', 'trac-fl', 'trac-fr', 'trac-rl', 'trac-rr');
+plot(t(2:end), vehicle_param.mu*data(12,:)); % friction limit - rear right wheel
+plot(t(2:end), sqrt(data(10,:).^2+data(11,:).^2)); % total traction - rear right wheel
+plot(t(2:end), data(22,:)); % input torque - rear right wheel
+plot(t(2:end), data(10,:)); % longitudinal force - rear right
+plot(t(2:end), data(11, :)); %lateral force - rear right
+plot(t, 1000*ref);
+scatter(t(2:end), 1000*data(20,:),'x') % slip angles - rear right
+legend('lim-rr', 'trac-rr', 'T-rr', 'flong-rr', 'flat-rr','steer', 'slip angle');
 
-F_wfl = sqrt(F_wfllong.^2 + F_wfllat.^2);
-F_wfr = sqrt(F_wfrlong.^2 + F_wfrlat.^2);
-F_wrl = sqrt(F_wrllong.^2 + F_wrllat.^2);
-F_wrr = sqrt(F_wrrlong.^2 + F_wrrlat.^2);
-
-figure
+% rear left
+figure;
 hold on
-plot(t(2:end), F_wfl)
-plot(t(2:end), F_nfl*vehicle_param.mu)
-legend('vector sum of forces', 'friction limit');
-title('friction limit and traction force, front left');
-figure
-hold on
-plot(t(2:end), F_wfr)
-plot(t(2:end), F_nfr*vehicle_param.mu);
-legend('vector sum of forces', 'friction limit');
-title('friction limit and traction force, front right');
-figure
-hold on
-plot(t(2:end), F_wrl)
-plot(t(2:end), F_nrl*vehicle_param.mu);
-legend('vector sum of forces', 'friction limit');
-title('friction limit and traction force, rear left');
-figure
-hold on
-plot(t(2:end), F_wrr)
-plot(t(2:end), F_nrr*vehicle_param.mu);
-legend('vector sum of forces', 'friction limit');
-title('friction limit and traction force, rear right');
-% plot(t(2:end), F_wrl)
-% plot(t(2:end), F_wrr)
-% legend('fl','fr', 'rl', 'rr');
+title('friction limits');
+plot(t(2:end), vehicle_param.mu*data(9,:)); % friction limit 
+plot(t(2:end), sqrt(data(7,:).^2+data(8,:).^2)); % total traction 
+plot(t(2:end), data(21,:)); % input torque 
+plot(t(2:end), data(7,:)); % longitudinal force 
+plot(t(2:end), data(8, :)); %lateral force
+plot(t, ref*1000);
+scatter(t(2:end), 1000*data(19,:), 'x'); % slip angles 
+legend('lim-rl', 'trac-rl', 'T-rl', 'flong-rl', 'flat-rl','steer', 'slip angle');

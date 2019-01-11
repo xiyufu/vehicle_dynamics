@@ -1,10 +1,10 @@
-function [delta, t] = GetInputSignal(dt)
+function [delta, t] = GetInputSignal(dt, t_end)
 %
 % This function generates the steering angle (delta in radians) for the assignment. It
 % also generates the time-vector (t in seconds), and the user can select the
 % time-sampling-rate (dt in seconds) which is used.
 
-t = (0:dt:6);
+t = (0:dt:t_end);
 
 delta = zeros(1,length(t)); 
 

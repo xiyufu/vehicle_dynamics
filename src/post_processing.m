@@ -6,38 +6,14 @@ function [] = post_processing(X, data, vehicle_param, inputs)
 % 
 % figure
 % subplot(311)
-% plot(inputs.time, X(1,:)), axis tight, xlabel('time [s]'), ylabel('X(1) [X]')
+% plot(inputs.time, X(1,:)), axis tight, xlabel('time [s]'), ylabel('X(1) [?]')
 % subplot(312)
-% plot(inputs.time, X(2,:)), axis tight, xlabel('time [s]'), ylabel('X(1) [Y]')
+% plot(inputs.time, X(2,:)), axis tight, xlabel('time [s]'), ylabel('X(1) [?]')
 % subplot(313)
-% plot(inputs.time, X(3,:)), axis tight, xlabel('time [s]'), ylabel('X(1) [phi]')
+% plot(inputs.time, X(3,:)), axis tight, xlabel('time [s]'), ylabel('X(1) [?]')
 
-a_lat=vertcat(data.a_lat);
 
-F_nfl=sum(vertcat(data.F_nfl))/length(vertcat(data.F_nfl));
-F_nfr=sum(vertcat(data.F_nfr))/length(vertcat(data.F_nfr));
-F_nrl=sum(vertcat(data.F_nrl))/length(vertcat(data.F_nrl));
-F_nrr=sum(vertcat(data.F_nrr))/length(vertcat(data.F_nrr));
-eta=(F_nfl+F_nfr)/vehicle_param.Cy_f - (F_nrl+F_nrr)/vehicle_param.Cy_r;
-beta_diff_olley=(eta/9.81)*a_lat(200:end)*180/pi;
-
-%figure(1)
-%plot(a_lat(200:end),beta_diff_olley)
-xlabel('Lateral Acceleration [m/s^2]'), ylabel('\beta_f - \beta_r [°]'), title ('Figure 1: Linear Tyre'),axis auto, grid on
-
-beta_fl=abs(vertcat(data.beta_fl));
-beta_rl=abs(vertcat(data.beta_rl));
-beta_fr=abs(vertcat(data.beta_fr));
-beta_rr=abs(vertcat(data.beta_rr));
-%figure(2)
-%plot(a_lat(200:end),[(beta_fl(200:end)-beta_rl(200:end))*(180/pi),(beta_fr(200:end)-beta_rr(200:end))*(180/pi)])
-%xlabel('Lateral Acceleration [m/s^2]'), ylabel('\beta_f - \beta_r [°]'),title ('Figure 2: Simulation with a Dugoff Tyre Model'),axis auto, grid on, legend ('Left two wheels','Right two wheels')
-%plot(data.a_lat,data.beta_f-data.beta_f), axis auto
-%plot(inputs.time(1:end-1),vertcat(data.a_lat))
-% figure(3)
-% plot(inputs.time(1:end-1),vertcat(data.beta_fl)*180/pi,inputs.time(1:end-1),vertcat(data.beta_rl)*180/pi), legend ('beta_fl','beta_rl')
-
-%
+%%
 for k = 1:20:length(inputs.time)
     
    
@@ -56,8 +32,21 @@ for k = 1:20:length(inputs.time)
     
      pause(0.0005)
 end
+
+%% compare input steering angle with yaw angle
+% normalize yaw
+yaw = wrapToPi(X(3,:));
+
+[ref, t] = GetInputSignal(inputs.dt, inputs.t_end);
+
+figure;
+hold on
+grid on
+plot(t, ref, 'LineWidth', 2);
+plot(t, yaw, 'LineWidth', 2);
+legend('Steering angle', 'Yaw angle');
 %%
-% 
+
 % energy = zeros(size(inputs.time));
 % for k = 1:length(inputs.time)
 %     

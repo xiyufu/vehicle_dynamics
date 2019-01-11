@@ -1,4 +1,4 @@
-function [delta, t] = GetInputSignal(dt)
+function [delta, t] = GetTVSignal(dt)
 %
 % This function generates the steering angle (delta in radians) for the assignment. It
 % also generates the time-vector (t in seconds), and the user can select the
@@ -10,14 +10,14 @@ delta = zeros(1,length(t));
 
 t1 = 0.5;
 [~,i1] = min(abs(t-t1));
-t2 = 1.3;
+t2 = 1.0;
 [~,i2] = min(abs(t-t2));
-delta(i1:i2) = 1;
+delta(i1:i2) = 0.8;
 
 
-t1 = 1.8;
+t1 = 2.5;
 [~,i1] = min(abs(t-t1));
-t2 = 4.5;
+t2 = 3.5;
 [~,i2] = min(abs(t-t2));
 delta(i1:i2) = -1.5;
 

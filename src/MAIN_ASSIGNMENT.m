@@ -7,8 +7,6 @@
 % In this file all parameters and inputs are defined, the integration
 % algorithm is called and the results are post-processed. 
 
-clc
-close all
 clear all
 
 %% Define vehicle parameters:
@@ -25,3 +23,4 @@ inputs = set_inputs(vehicle_param);
 
 %% Post-process results: 
 post_processing(X, data, vehicle_param, inputs);
+

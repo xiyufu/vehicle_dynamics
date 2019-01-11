@@ -24,7 +24,6 @@ function [F] = tyre_model_Dugoff(Fz, beta, s, mu, Cx, Cy, sign_Fx)
     % These variables are defined in a frame attached to the wheel. 
     % This frame follows the wheel steering angle, but doesn't follow
     % the other rotations of the wheel.
-
 if s==1 % this if is necessary, because otherwise Matlab will crash on a 'zero divided by zero'-limit problem
     F(1) = -Cx*mu*Fz/sqrt(Cx^2+(Cy*tan(beta))^2);
     F(2) = -Cy*tan(beta)*mu*Fz/sqrt(Cx^2+(Cy*tan(beta))^2);

@@ -1,57 +1,71 @@
-function [F_wfl, F_wfr, F_wrl, F_wrr, data] = get_tyre_forces(a_car_old,V_car,dphidt,steer_angle,F_aero,vehicle_param,inputs,X,k)
+function [Ffl, Ffr, Frl, Frr, F_aero, alpha, slips] = get_tyre_forces(vehicle_param, inputs, X, dX_old, k)
+%get_tyre_forces calculate tyre forces for 4-wheel model
+% Velocity equals the velocity from the previous time-step:
+dX(1:vehicle_param.n_dofs) = X(vehicle_param.n_dofs+1:end);
 
-Vlong=V_car(1);
-Vlat=V_car(2);
-a_longold=a_car_old(1);
-a_latold=a_car_old(2);
+%% Perform velocity projections on velocities:
+m = vehicle_param.M;
+a = vehicle_param.a;
+b = vehicle_param.b;
+t = vehicle_param.Df;
+theta = inputs.inclin_angle;
+h = vehicle_param.h;
+ha = vehicle_param.h_aero;
+r = vehicle_param.r_w;
+g= 9.81;
+% X = [x, y, phi, phifr, phifl, phirr, phirl, x_dot, y_dot, phi_dot, phifr_dot, phifl_dot, phirr_dot, phirl_dot]
+phi = X(3);
+x_dot = X(vehicle_param.n_dofs + 1);
+y_dot = X(vehicle_param.n_dofs + 2);
+dphidt = X(vehicle_param.n_dofs+3);
+omega_fr = X(vehicle_param.n_dofs + 4);
+omega_fl = X(vehicle_param.n_dofs + 5);
+omega_rr = X(vehicle_param.n_dofs + 6);
+omega_rl = X(vehicle_param.n_dofs +7);
 
+delta = inputs.delta(k);
+ 
+%% velocities in car frame
+V_long = x_dot*cos(phi) + y_dot*sin(phi);
+V_lat = -x_dot*sin(phi) + y_dot*cos(phi);
+
+%% Calculate aerodynamics forces:
+% don't put sign here
+F_aero = V_long^2*vehicle_param.rho_air*vehicle_param.Cv*vehicle_param.A_front/2;
 %% Calculate wheel velocities:
-
-[Vwfl_long,Vwfl_lat,beta_fl] = get_wheel_velocities(Vlong,Vlat,dphidt,steer_angle,vehicle_param.a,vehicle_param.tf2);
-[Vwfr_long,Vwfr_lat,beta_fr] = get_wheel_velocities(Vlong,Vlat,dphidt,steer_angle,vehicle_param.a,-vehicle_param.tf2);
-[Vwrl_long,Vwrl_lat,beta_rl] = get_wheel_velocities(Vlong,Vlat,dphidt,0,-vehicle_param.b,vehicle_param.tr2);
-[Vwrr_long,Vwrr_lat,beta_rr] = get_wheel_velocities(Vlong,Vlat,dphidt,0,-vehicle_param.b,-vehicle_param.tr2);
-
+[Vfl, Vfr, Vrl, Vrr, alpha_fl, alpha_fr, alpha_rl, alpha_rr] = get_wheel_velocities(V_long, V_lat, dphidt, delta, vehicle_param);
+alpha = [alpha_fl, alpha_fr, alpha_rl, alpha_rr];
 %% Calculate longitudinal slip:
+% - sign in front of omega because of sign convention
+[sfl, sign_Fxfl] = calc_slip(Vfl(1), omega_fl*r);
+[sfr, sign_Fxfr] = calc_slip(Vfr(1), omega_fr*r);
+[srl, sign_Fxrl] = calc_slip(Vrl(1), omega_rl*r);
+[srr, sign_Fxrr] = calc_slip(Vrr(1), omega_rr*r);
 
-omega_Rfl = X(vehicle_param.n_dofs+4)*vehicle_param.r_w;
-omega_Rfr = X(vehicle_param.n_dofs+5)*vehicle_param.r_w;
-omega_Rrl = X(vehicle_param.n_dofs+6)*vehicle_param.r_w;
-omega_Rrr = X(vehicle_param.n_dofs+7)*vehicle_param.r_w;
-
-[slip_fl, sign_Fxfl] = calc_slip(Vwfl_long, omega_Rfl);
-[slip_fr, sign_Fxfr] = calc_slip(Vwfr_long, omega_Rfr);
-[slip_rl, sign_Fxrl] = calc_slip(Vwrl_long, omega_Rrl);
-[slip_rr, sign_Fxrr] = calc_slip(Vwrr_long, omega_Rrr);
+slips = [sfl;sfr;srl;srr];
+% % test
+% if sign(V_longf*omega_f) < 0
+%     flag = 1;
+% end
 
 %% Calculate normal forces:
+ax = dX_old(vehicle_param.n_dofs + 1)*cos(phi) + dX_old(vehicle_param.n_dofs +2)*sin(phi);
+ay = -dX_old(vehicle_param.n_dofs + 1)*sin(phi) + dX_old(vehicle_param.n_dofs + 2)*cos(phi);
 
-F_nfaxle=(-F_aero*(vehicle_param.h_aero)-vehicle_param.M*a_longold*(vehicle_param.h)+vehicle_param.M*9.81*vehicle_param.b-inputs.T(1,k)*cos(steer_angle)-inputs.T(2,k)*cos(steer_angle)-inputs.T(3,k)-inputs.T(4,k))/vehicle_param.L;
-F_nraxle=(F_aero*(vehicle_param.h_aero)+vehicle_param.M*a_longold*(vehicle_param.h)+vehicle_param.M*9.81*vehicle_param.a+inputs.T(1,k)*cos(steer_angle)+inputs.T(2,k)*cos(steer_angle)-inputs.T(3,k)-inputs.T(4,k))/vehicle_param.L;
-
-F_nfl=(F_nfaxle*vehicle_param.tf2-a_latold*vehicle_param.M)/(2*vehicle_param.tf2);
-F_nfr=(F_nfaxle*vehicle_param.tf2+a_latold*vehicle_param.M)/(2*vehicle_param.tf2);
-F_nrl=(F_nraxle*vehicle_param.tr2-a_latold*vehicle_param.M)/(2*vehicle_param.tr2);
-F_nrr=(F_nraxle*vehicle_param.tr2+a_latold*vehicle_param.M)/(2*vehicle_param.tr2);
-
+% The stiffness of the anti-roll bar is needed to get exact load
+% distribution, here I simply allocate the load evenly
+F_nf = (b*m*g*cos(theta) - F_aero*ha - h*m*g*sin(theta) - m*ax*h)/(a+b);
+F_nr = (a*m*g*cos(theta) + F_aero*ha  + h*m*g*sin(theta) + m*ax*h)/(a+b);
+delta_n = m*ay*h/t/2;
+F_nfl = F_nf/2 - delta_n;
+F_nfr = F_nf/2 + delta_n;
+F_nrl = F_nr/2 - delta_n;
+F_nrr = F_nr/2 + delta_n;
 %% Calculate tyre forces:
+Ffl = tyre_model_Dugoff(F_nfl, alpha_fl, sfl, vehicle_param.mu, vehicle_param.Cx_f, vehicle_param.Cy_f, sign_Fxfl);
+Ffr = tyre_model_Dugoff(F_nfr, alpha_fr, sfr, vehicle_param.mu, vehicle_param.Cx_f, vehicle_param.Cy_f, sign_Fxfr);
+Frl = tyre_model_Dugoff(F_nrl, alpha_rl, srl, vehicle_param.mu, vehicle_param.Cx_r, vehicle_param.Cy_r, sign_Fxrl);
+Frr = tyre_model_Dugoff(F_nrr, alpha_rr, srr, vehicle_param.mu, vehicle_param.Cx_r, vehicle_param.Cy_r, sign_Fxrr);
 
-[F_wfl] = tyre_model_Dugoff(F_nfl, beta_fl, slip_fl, vehicle_param.mu, vehicle_param.Cx_f, vehicle_param.Cy_f, sign_Fxfl);
-[F_wfr] = tyre_model_Dugoff(F_nfr, beta_fr, slip_fr, vehicle_param.mu, vehicle_param.Cx_f, vehicle_param.Cy_f, sign_Fxfr);
-[F_wrl] = tyre_model_Dugoff(F_nrl, beta_rl, slip_rl, vehicle_param.mu, vehicle_param.Cx_r, vehicle_param.Cy_r, sign_Fxrl);
-[F_wrr] = tyre_model_Dugoff(F_nrr, beta_rr, slip_rr, vehicle_param.mu, vehicle_param.Cx_r, vehicle_param.Cy_r, sign_Fxrr);
+end
 
-% Additional interesting data can be stored in data:
-% data.Vwfl_long=Vwfl_long;
-% data.slip_fl=slip_fl;
-% data.slip_fr=slip_fr;
-% data.slip_rl=slip_rl;
-% data.slip_rr=slip_rr;
-data.F_nfl=F_nfl;
-data.F_nfr=F_nfr;
-data.F_nrl=F_nrl;
-data.F_nrr=F_nrr;
-data.beta_fl=beta_fl;
-data.beta_fr=beta_fr;
-data.beta_rl=beta_rl;
-data.beta_rr=beta_rr;
