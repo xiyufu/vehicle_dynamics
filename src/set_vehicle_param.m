@@ -5,7 +5,7 @@ function vehicle_param = set_vehicle_param()
 %
 
 % Set number of degrees-of-freedom for the model:
-vehicle_param.n_dofs = 7;
+vehicle_param.n_dofs = 15;
 
 % Define additional system parameters:
 vehicle_param.M = 1500; % vehicle mass [kg]
@@ -30,4 +30,6 @@ vehicle_param.rho_air = 1.3; % density of air [kg/m³]
 
 vehicle_param.mu = 0.5; % friction constant between wheel-road [/]
 
+vehicle_param.sigma_x = 0.5; % longitudinal relaxation length
+vehicle_param.sigma_y = 0.5; % lateral relaxation length
 

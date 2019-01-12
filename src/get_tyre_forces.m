@@ -1,4 +1,4 @@
-function [Ffl, Ffr, Frl, Frr, F_aero, alpha, slips] = get_tyre_forces(vehicle_param, inputs, X, dX_old, k)
+function [Ffl, Ffr, Frl, Frr, F_aero, alpha, slips, ds, dalpha] = get_tyre_forces(vehicle_param, inputs, X, dX_old, k, relaxation_disable)
 %get_tyre_forces calculate tyre forces for 4-wheel model
 % Velocity equals the velocity from the previous time-step:
 dX(1:vehicle_param.n_dofs) = X(vehicle_param.n_dofs+1:end);
@@ -34,7 +34,7 @@ V_lat = -x_dot*sin(phi) + y_dot*cos(phi);
 F_aero = V_long^2*vehicle_param.rho_air*vehicle_param.Cv*vehicle_param.A_front/2;
 %% Calculate wheel velocities:
 [Vfl, Vfr, Vrl, Vrr, alpha_fl, alpha_fr, alpha_rl, alpha_rr] = get_wheel_velocities(V_long, V_lat, dphidt, delta, vehicle_param);
-alpha = [alpha_fl, alpha_fr, alpha_rl, alpha_rr];
+
 %% Calculate longitudinal slip:
 % - sign in front of omega because of sign convention
 [sfl, sign_Fxfl] = calc_slip(Vfl(1), omega_fl*r);
@@ -42,7 +42,6 @@ alpha = [alpha_fl, alpha_fr, alpha_rl, alpha_rr];
 [srl, sign_Fxrl] = calc_slip(Vrl(1), omega_rl*r);
 [srr, sign_Fxrr] = calc_slip(Vrr(1), omega_rr*r);
 
-slips = [sfl;sfr;srl;srr];
 % % test
 % if sign(V_longf*omega_f) < 0
 %     flag = 1;
@@ -62,6 +61,39 @@ F_nfr = F_nf/2 + delta_n;
 F_nrl = F_nr/2 - delta_n;
 F_nrr = F_nr/2 + delta_n;
 %% Calculate tyre forces:
+ds = zeros(1,4);
+dalpha = zeros(1,4);
+if relaxation_disable == 0
+    % override s and alpha. Not efficient though...
+    % X(8:15) ~ sfl, sfr, srl, srr, alpha_fl, alpha_fr, alpha_rl, alpha_rr
+    sfl = X(8);
+    sfr = X(9);
+    srl = X(10);
+    srr = X(11);
+    alpha_fl = X(12);
+    alpha_fr = X(13);
+    alpha_rl = X(14);
+    alpha_rr = X(15);
+%     kappa_f = Vsxf/Vxf;
+%     alpha_f = atan2(Vsyf,Vxf);
+%     
+%     kappa_r = Vsxr/Vxr;
+%     alpha_r = atan2(Vsyr,Vxr);
+% dx(9)  = (-Vxf*x(9)  + Vsxf)/param.sigma_x; % Tyre relaxation longitudinal - front
+% dx(10) = (-Vxf*x(10) + Vsyf)/param.sigma_y; % Tyre relaxation lateral - front
+
+    ds(1) = (-Vfl(1)*sfl + r*omega_fl-Vfl(1))/vehicle_param.sigma_x;
+    ds(2) = (-Vfr(1)*sfr + r*omega_fr-Vfr(1))/vehicle_param.sigma_x;
+    ds(3) = (-Vrl(1)*srl + r*omega_rl-Vrl(1))/vehicle_param.sigma_x;
+    ds(4) = (-Vrr(1)*srr + r*omega_rr-Vrr(1))/vehicle_param.sigma_x;
+    dalpha(1) = (-Vfl(1)*alpha_fl + Vfl(2))/vehicle_param.sigma_y;
+    dalpha(2) = (-Vfr(1)*alpha_fr + Vfr(2))/vehicle_param.sigma_y;
+    dalpha(3) = (-Vrl(1)*alpha_rl + Vrl(2))/vehicle_param.sigma_y;
+    dalpha(4) = (-Vrr(1)*alpha_rr + Vrr(2))/vehicle_param.sigma_y;
+end
+alpha = [alpha_fl, alpha_fr, alpha_rl, alpha_rr];
+slips = [sfl,sfr,srl,srr];
+
 Ffl = tyre_model_Dugoff(F_nfl, alpha_fl, sfl, vehicle_param.mu, vehicle_param.Cx_f, vehicle_param.Cy_f, sign_Fxfl);
 Ffr = tyre_model_Dugoff(F_nfr, alpha_fr, sfr, vehicle_param.mu, vehicle_param.Cx_f, vehicle_param.Cy_f, sign_Fxfr);
 Frl = tyre_model_Dugoff(F_nrl, alpha_rl, srl, vehicle_param.mu, vehicle_param.Cx_r, vehicle_param.Cy_r, sign_Fxrl);
