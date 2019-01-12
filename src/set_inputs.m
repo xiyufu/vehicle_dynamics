@@ -5,7 +5,7 @@ function inputs = set_inputs(vehicle_param)
 %
 
 % flags
-inputs.relaxation_disable = 1; % = 0, enable relaxation length
+inputs.relaxation_disable = 0; % = 0, enable relaxation length
 inputs.tc_disable = 0; % = 0, enable torque vectoring
 inputs.small_torque_disable = 1; % = 0, give 10Nm as input torque instead of 200Nm
 

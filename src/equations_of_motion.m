@@ -81,7 +81,9 @@ dX(vehicle_param.n_dofs + 4) = (Tfr - r*Fxfr)/Iw;
 dX(vehicle_param.n_dofs + 5) = (Tfl - r*Fxfl)/Iw;
 dX(vehicle_param.n_dofs + 6) = (Trr - r*Fxrr)/Iw;
 dX(vehicle_param.n_dofs + 7) = (Trl - r*Fxrl)/Iw;
-
+% if Trr-r*Fxrr < 0 && dX(1)>dX(6)*r 
+%     k;
+% end
 dX(vehicle_param.n_dofs + 8:vehicle_param.n_dofs + 15) = [ds';dalpha'];
 % Additional interesting data can be stored in data:
 % lateral in car frame
