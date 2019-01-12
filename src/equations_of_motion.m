@@ -85,6 +85,7 @@ dX(vehicle_param.n_dofs + 7) = (Trl - r*Fxrl)/Iw;
 %     k;
 % end
 dX(vehicle_param.n_dofs + 8:vehicle_param.n_dofs + 15) = [ds';dalpha'];
+
 % Additional interesting data can be stored in data:
 % lateral in car frame
 % a_lat = -dX(vehicle_param.n_dofs + 1)*sin(phi) + dX(vehicle_param.n_dofs + 2)*cos(phi);

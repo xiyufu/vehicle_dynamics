@@ -82,14 +82,29 @@ if relaxation_disable == 0
 % dx(9)  = (-Vxf*x(9)  + Vsxf)/param.sigma_x; % Tyre relaxation longitudinal - front
 % dx(10) = (-Vxf*x(10) + Vsyf)/param.sigma_y; % Tyre relaxation lateral - front
 
-    ds(1) = (-Vfl(1)*sfl + max(r*omega_fl-Vfl(1), Vfl(1)-r*omega_fl))/vehicle_param.sigma_x;
-    ds(2) = (-Vfr(1)*sfr + max(r*omega_fr-Vfr(1), Vfr(1)-r*omega_fr))/vehicle_param.sigma_x;
-    ds(3) = (-Vrl(1)*srl + max(r*omega_rl-Vrl(1), Vrl(1)-r*omega_rl))/vehicle_param.sigma_x;
-    ds(4) = (-Vrr(1)*srr + max(r*omega_rr-Vrr(1), Vrr(1)-r*omega_rr))/vehicle_param.sigma_x;
+%     ds(1) = (-Vfl(1)*sfl + max(r*omega_fl-Vfl(1), Vfl(1)-r*omega_fl))/vehicle_param.sigma_x;
+%     ds(2) = (-Vfr(1)*sfr + max(r*omega_fr-Vfr(1), Vfr(1)-r*omega_fr))/vehicle_param.sigma_x;
+%     ds(3) = (-Vrl(1)*srl + max(r*omega_rl-Vrl(1), Vrl(1)-r*omega_rl))/vehicle_param.sigma_x;
+%     ds(4) = (-Vrr(1)*srr + max(r*omega_rr-Vrr(1), Vrr(1)-r*omega_rr))/vehicle_param.sigma_x;
+    ds(1) = (-Vfl(1)*sfl +r*omega_fl-Vfl(1))/vehicle_param.sigma_x;
+    ds(2) = (-Vfr(1)*sfr + r*omega_fr-Vfr(1))/vehicle_param.sigma_x;
+    ds(3) = (-Vrl(1)*srl + r*omega_rl-Vrl(1))/vehicle_param.sigma_x;
+    ds(4) = (-Vrr(1)*srr + r*omega_rr-Vrr(1))/vehicle_param.sigma_x;
+%     sfl = sfl + ds(1)*inputs.inner_dt;
+%     sfr = sfr + ds(2)*inputs.inner_dt;
+%     srl = srl + ds(3)*inputs.inner_dt;
+%     srr = srr + ds(4)*inputs.inner_dt;
+    
     dalpha(1) = (-Vfl(1)*alpha_fl + Vfl(2))/vehicle_param.sigma_y;
     dalpha(2) = (-Vfr(1)*alpha_fr + Vfr(2))/vehicle_param.sigma_y;
     dalpha(3) = (-Vrl(1)*alpha_rl + Vrl(2))/vehicle_param.sigma_y;
     dalpha(4) = (-Vrr(1)*alpha_rr + Vrr(2))/vehicle_param.sigma_y;
+%     alpha_fr = alpha_fr + dalpha(1)*inputs.inner_dt;
+%     alpha_fl = alpha_fl + dalpha(2)*inputs.inner_dt;
+%     alpha_rl = alpha_rl + dalpha(3)*inputs.inner_dt;
+%     alpha_rr = alpha_rr + dalpha(4)*inputs.inner_dt;
+    
+
 %     sign_Fxfl = sign(r*omega_fl-Vfl(1));
 %     sign_Fxfr = sign(r*omega_fr-Vfr(1));
 %     sign_Fxrl = sign(r*omega_rl-Vrl(1));
@@ -107,10 +122,10 @@ Ffr = tyre_model_Dugoff(F_nfr, alpha_fr, sfr, vehicle_param.mu, vehicle_param.Cx
 Frl = tyre_model_Dugoff(F_nrl, alpha_rl, srl, vehicle_param.mu, vehicle_param.Cx_r, vehicle_param.Cy_r, sign_Fxrl);
 Frr = tyre_model_Dugoff(F_nrr, alpha_rr, srr, vehicle_param.mu, vehicle_param.Cx_r, vehicle_param.Cy_r, sign_Fxrr);
 
-% Ffl = tyre_model_Dugoff(F_nfl, alpha_fl, sfl, vehicle_param.mu, vehicle_param.Cx_f, vehicle_param.Cy_f,0);
-% Ffr = tyre_model_Dugoff(F_nfr, alpha_fr, sfr, vehicle_param.mu, vehicle_param.Cx_f, vehicle_param.Cy_f,0);
-% Frl = tyre_model_Dugoff(F_nrl, alpha_rl, srl, vehicle_param.mu, vehicle_param.Cx_r, vehicle_param.Cy_r,0);
-% Frr = tyre_model_Dugoff(F_nrr, alpha_rr, srr, vehicle_param.mu, vehicle_param.Cx_r, vehicle_param.Cy_r,0);
+% Ffl = tyre_model_Dugoff(F_nfl, alpha_fl, abs(sfl), vehicle_param.mu, vehicle_param.Cx_f, vehicle_param.Cy_f,0);
+% Ffr = tyre_model_Dugoff(F_nfr, alpha_fr, abs(sfr), vehicle_param.mu, vehicle_param.Cx_f, vehicle_param.Cy_f,0);
+% Frl = tyre_model_Dugoff(F_nrl, alpha_rl, abs(srl), vehicle_param.mu, vehicle_param.Cx_r, vehicle_param.Cy_r,0);
+% Frr = tyre_model_Dugoff(F_nrr, alpha_rr, abs(srr), vehicle_param.mu, vehicle_param.Cx_r, vehicle_param.Cy_r,0);
 % Ffl(1) = -sign_Fxfl*Ffl(1);
 % Ffr(1) =-sign_Fxfr*Ffr(1);
 % Frl(1) = -sign_Fxrl*Frl(1);

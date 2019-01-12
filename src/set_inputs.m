@@ -10,6 +10,7 @@ inputs.tc_disable = 0; % = 0, enable torque vectoring
 inputs.small_torque_disable = 1; % = 0, give 10Nm as input torque instead of 200Nm
 
 % Obligatory time information:
+inputs.inner_dt = 0.00001;
 inputs.dt = 0.001;
 inputs.t_end = 6;
 inputs.time = (0:inputs.dt:inputs.t_end);
