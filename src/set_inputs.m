@@ -5,14 +5,15 @@ function inputs = set_inputs(vehicle_param)
 %
 
 % flags
-inputs.relaxation_disable = 0; % = 0, enable relaxation length
+inputs.relaxation_disable = 1; % = 0, enable relaxation length
 inputs.tc_disable = 0; % = 0, enable torque vectoring
-inputs.small_torque_disable = 1; % = 0, give 10Nm as input torque instead of 200Nm
+inputs.small_torque_disable = 1; % = 0, give 10Nm as input torque instead of 200Nm, 
+                                                    % only effective when torque vectoring is disabled
 
 % Obligatory time information:
-inputs.inner_dt = 0.00001;
-inputs.dt = 0.001;
-inputs.t_end = 6;
+inputs.inner_dt = 0.00001; % not used for current version
+inputs.dt = 0.001; % main integration steps
+inputs.t_end = 6; % duration of simulation
 inputs.time = (0:inputs.dt:inputs.t_end);
 n = length(inputs.time);
 
